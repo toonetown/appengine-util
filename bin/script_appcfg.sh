@@ -74,7 +74,7 @@ fi
 while [ $# -gt 0 ]; do PARAMS+=("${1}"); shift; done
 
 # Execute the command using expect
-expect << EOT | grep --line-buffered -v '^spawn'
+expect << EOT | tr -d '\r' | grep --line-buffered -v '^spawn'
 spawn appcfg.sh ${OPTS[@]} ${CMD} ${PARAMS[@]}
 expect {
     "Password for *" {
