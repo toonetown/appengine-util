@@ -74,14 +74,21 @@ fi
 while [ $# -gt 0 ]; do PARAMS+=("${1}"); shift; done
 
 # Execute the command using expect
-expect << EOT | tr -d '\r' | grep --line-buffered -v '^spawn'
+expect << EOT | tr -u -d '\r'
 spawn appcfg.sh ${OPTS[@]} ${CMD} ${PARAMS[@]}
-expect {
-    "Password for *" {
-        send "${PASSWORD}\r"
-        expect eof
+while 1 {
+    expect {
+        -re "(\[^\r]*\)\r\n" {
+            append output \$expect_out(buffer)
+        }
+        "Password for *" {
+            append output \$expect_out(buffer)
+            send "nhncxundvamgcxhh\r"
+        }
+        eof {
+            break
+        }
     }
-    eof
 }
 lassign [wait] pid spawnid os_error_flag value
 exit \$value
