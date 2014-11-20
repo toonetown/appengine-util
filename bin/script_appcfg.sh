@@ -73,8 +73,15 @@ fi
 # Get the parameters
 while [ $# -gt 0 ]; do PARAMS+=("${1}"); shift; done
 
-# Execute the command using expect
-expect << EOT | tr -u -d '\r'
+# Execute the command using expect (buffer it if we have stdbuf)
+if which stdbuf &>/dev/null; then
+    EXPECT="stdbuf -oL -eL expect"
+    TR="tr"
+else
+    EXPECT="expect"
+    TR="tr -u"
+fi
+${EXPECT} << EOT | ${TR} -d '\r'
 spawn appcfg.sh ${OPTS[@]} ${CMD} ${PARAMS[@]}
 while 1 {
     expect {
@@ -83,7 +90,7 @@ while 1 {
         }
         "Password for *" {
             append output \$expect_out(buffer)
-            send "nhncxundvamgcxhh\r"
+            $([ -n "${PASSWORD}" ] && echo "send \"${PASSWORD}\\r"\")
         }
         eof {
             break
