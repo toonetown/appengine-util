@@ -81,23 +81,27 @@ else
     EXPECT="expect"
     TR="tr -u"
 fi
-${EXPECT} << EOT | ${TR} -d '\r'
-spawn appcfg.sh ${OPTS[@]} ${CMD} ${PARAMS[@]}
-while 1 {
-    expect {
-        -re "(\[^\r]*\)\r\n" {
-            append output \$expect_out(buffer)
-        }
-        "Password for *" {
-            append output \$expect_out(buffer)
-            $([ -n "${PASSWORD}" ] && echo "send \"${PASSWORD}\\r"\")
-        }
-        eof {
-            break
+if [ -n "${PASSWORD}" ]; then
+    ${EXPECT} << EOT | ${TR} -d '\r'
+    spawn appcfg.sh ${OPTS[@]} ${CMD} ${PARAMS[@]}
+    while 1 {
+        expect {
+            -re "(\[^\r]*\)\r\n" {
+                append output \$expect_out(buffer)
+            }
+            "Password for *" {
+                append output \$expect_out(buffer)
+                $([ -n "${PASSWORD}" ] && echo "send \"${PASSWORD}\\r"\")
+            }
+            eof {
+                break
+            }
         }
     }
-}
-lassign [wait] pid spawnid os_error_flag value
-exit \$value
+    lassign [wait] pid spawnid os_error_flag value
+    exit \$value
 EOT
+else
+    appcfg.sh ${OPTS[@]} ${CMD} ${PARAMS[@]}
+fi
 exit $?
