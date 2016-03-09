@@ -7,22 +7,20 @@ O_OUTPUT="${1}"
 [ $# -gt 0 ] && shift
 
 if [ -z "${OUTPUT}" ]; then
-    echo "Usage: $0 <outputfile> [appcfg-opts...]"
-    echo ""
-    echo "You can specify a different APPCFG script to use.  Default is"
-    echo "script_appcfg.sh"
+    echo "Usage: $0 <outputfile> [gcloud-opts...]"
     exit 1
 fi
 
-APPCFG="${APPCFG:-script_appcfg.sh}"
-VERSIONS="$(${APPCFG} $@ list_versions | sed -En "s/^default: \[(.*)\]$/\1/p" | sed -E "s/[',]//g")"
-[ -n "${VERSIONS}" ] || { ${APPCFG} help request_logs; exit 1; }
+VERSIONS="$(gcloud preview app modules list | sed -En 's/^default +([^ ]+) .*$/\1/p')"
+[ -n "${VERSIONS}" ] || { gcloud preview app modules get-logs -h; exit 1; }
 
 rm -f "${OUTPUT}"
 for v in ${VERSIONS}; do
     echo "====================="
     echo "Fetching for version '${v}'..."
     echo "====================="
-    ${APPCFG} -V ${v} $@ -a request_logs "${OUTPUT}" || exit $?
+    gcloud preview app modules get-logs default "${OUTPUT}.tmp" --version "${v}" $@ || exit $?
+    cat "${OUTPUT}.tmp" >> "${OUTPUT}" || exit $?
+    rm -f "${OUTPUT}.tmp"
 done
 if [ "${OUTPUT}" != "${O_OUTPUT}" ]; then gzip "${OUTPUT}" || exit $?; fi
