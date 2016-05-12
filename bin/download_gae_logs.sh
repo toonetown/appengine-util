@@ -11,7 +11,7 @@ if [ -z "${OUTPUT}" ]; then
     exit 1
 fi
 
-VERSIONS="$(gcloud preview app modules list | sed -En 's/^default +([^ ]+) .*$/\1/p')"
+VERSIONS="$(gcloud preview app versions list | sed -En 's/^default +([^ ]+) .*$/\1/p')"
 [ -n "${VERSIONS}" ] || { gcloud preview app modules get-logs -h; exit 1; }
 
 rm -f "${OUTPUT}"
